@@ -1,8 +1,22 @@
 # Medical AI Validation Tools: Survival & Calibration
 
-[![CI](https://github.com/Herbert-Research/medical-ai-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/Herbert-Research/medical-ai-validation/actions/workflows/ci.yml)
+[![CI](https://github.com/Herbert-Research/medical-ai-validation-version1/actions/workflows/ci.yml/badge.svg)](https://github.com/Herbert-Research/medical-ai-validation-version1/actions/workflows/ci.yml)
 
-Supporting analytics package for the proposed PhD dissertation **“Prospective Validation of Station-Specific Risk Guidance for KLASS-Standardized Gastrectomy.”** This repository establishes the quantitative framework for linking station-level machine learning predictions to disease-free survival (DFS) endpoints, a critical prerequisite for Aim 1 clinical deployment.
+Supporting analytics package for the proposed PhD dissertation **"Prospective Validation of Station-Specific Risk Guidance for KLASS-Standardized Gastrectomy."** This repository establishes the quantitative framework for linking station-level machine learning predictions to disease-free survival (DFS) endpoints, a critical prerequisite for Aim 1 clinical deployment.
+
+## ⚠️ Current Limitations
+
+> **Important**: This toolkit demonstrates methodology but has known gaps requiring further development before clinical deployment.
+
+| Issue | Current Status | Target | Notes |
+|-------|----------------|--------|-------|
+| Expected Calibration Error | 0.054–0.076 | ≤ 0.05 | Isotonic regression performs best |
+| Platt Scaling | Slope = 3.52 | Slope ≈ 1.0 | Inappropriate for this probability distribution |
+| Sample Size | 240 synthetic patients | 2000+ for deployment | Power analysis in `statistical_power_analysis.py` |
+| External Validation | TCGA pilot only | Multi-institutional | IRB approval pending for prospective data |
+| Hazard Ratio | 0.52 (synthetic) | 0.85–0.92 (literature) | Optimistic upper bound for demonstration |
+
+These limitations are discussed transparently throughout the documentation. See [Limitations and Current Calibration Status](#limitations-and-current-calibration-status) and [LITERATURE_COMPARISON.md](LITERATURE_COMPARISON.md) for detailed analysis of how these results contextualize within published medical AI validation studies.
 
 ## Executive Summary
 
