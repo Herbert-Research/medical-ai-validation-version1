@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software for your research, please cite it as below."
+title: "Medical AI Validation Tools: Survival Analysis and Calibration for Gastric Cancer Surgery"
+version: 1.0.0
+date-released: 2025-11-11
+url: "https://github.com/Herbert-Research/medical-ai-validation"
+authors:
+  - family-names: Dressler
+    given-names: Maximilian Herbert
+abstract: "Quantitative survival validation and probabilistic calibration workflows for AI-guided KLASS-standardized gastrectomy research."
+keywords:
+  - survival analysis
+  - calibration
+  - medical AI
+  - gastric cancer
+  - surgical decision support
+license: MIT
