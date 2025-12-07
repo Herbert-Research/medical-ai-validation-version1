@@ -123,3 +123,119 @@ class TestCLIInterface:
         """Verify invalid calibration strategy raises error."""
         with pytest.raises(SystemExit):
             dq.parse_cli_args(["--calibration-strategy", "invalid"])
+
+
+class TestNotebookExecution:
+    """Tests for Jupyter notebook validity and structure."""
+
+    def test_notebook_syntax_valid(self) -> None:
+        """Verify notebook is valid JSON and has expected structure."""
+        import json
+
+        notebook_path = Path("survival_and_calibration_enhanced.ipynb")
+        if not notebook_path.exists():
+            pytest.skip("Notebook not present")
+
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            nb = json.load(f)
+
+        # Verify required top-level keys exist
+        assert "cells" in nb, "Notebook must have 'cells' key"
+        assert "metadata" in nb, "Notebook must have 'metadata' key"
+        assert "nbformat" in nb, "Notebook must have 'nbformat' key"
+        assert len(nb["cells"]) > 0, "Notebook must have at least one cell"
+
+    def test_notebook_has_code_cells(self) -> None:
+        """Verify notebook contains executable code cells."""
+        import json
+
+        notebook_path = Path("survival_and_calibration_enhanced.ipynb")
+        if not notebook_path.exists():
+            pytest.skip("Notebook not present")
+
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            nb = json.load(f)
+
+        code_cells = [c for c in nb["cells"] if c.get("cell_type") == "code"]
+        assert len(code_cells) > 0, "Notebook should have code cells"
+
+    def test_notebook_cells_have_valid_structure(self) -> None:
+        """Verify each cell has required structure fields."""
+        import json
+
+        notebook_path = Path("survival_and_calibration_enhanced.ipynb")
+        if not notebook_path.exists():
+            pytest.skip("Notebook not present")
+
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            nb = json.load(f)
+
+        for i, cell in enumerate(nb["cells"]):
+            assert "cell_type" in cell, f"Cell {i} missing 'cell_type'"
+            assert "source" in cell, f"Cell {i} missing 'source'"
+            assert cell["cell_type"] in {
+                "code",
+                "markdown",
+                "raw",
+            }, f"Cell {i} has invalid cell_type: {cell.get('cell_type')}"
+
+    def test_notebook_metadata_has_kernel_info(self) -> None:
+        """Verify notebook metadata includes kernel specification."""
+        import json
+
+        notebook_path = Path("survival_and_calibration_enhanced.ipynb")
+        if not notebook_path.exists():
+            pytest.skip("Notebook not present")
+
+        with open(notebook_path, "r", encoding="utf-8") as f:
+            nb = json.load(f)
+
+        metadata = nb.get("metadata", {})
+        # Check for either kernelspec or language_info
+        has_kernel_info = "kernelspec" in metadata or "language_info" in metadata
+        assert has_kernel_info, "Notebook metadata should include kernel information"
+
+
+class TestSensitivityAnalysis:
+    """Tests for sensitivity analysis script."""
+
+    def test_sensitivity_analysis_runs(self, tmp_path: Path) -> None:
+        """Verify sensitivity analysis executes without error."""
+        import sensitivity_analysis as sa
+
+        # Run with minimal seeds and patients for speed
+        output_path = tmp_path / "sensitivity_test.csv"
+        results = sa.run_sensitivity_analysis(
+            seeds=[42, 123],
+            n_patients=50,
+            output_path=output_path,
+        )
+
+        assert len(results) == 2
+        assert "hazard_ratio" in results.columns
+        assert "c_index" in results.columns
+        assert output_path.exists()
+
+    def test_sensitivity_results_schema(self, tmp_path: Path) -> None:
+        """Verify sensitivity analysis output has expected columns."""
+        import sensitivity_analysis as sa
+
+        output_path = tmp_path / "sensitivity_schema.csv"
+        results = sa.run_sensitivity_analysis(
+            seeds=[42],
+            n_patients=50,
+            output_path=output_path,
+        )
+
+        expected_columns = {
+            "seed",
+            "hazard_ratio",
+            "hr_ci_lower",
+            "hr_ci_upper",
+            "logrank_p",
+            "c_index",
+            "median_treatment",
+            "median_control",
+            "ph_global_p",
+        }
+        assert expected_columns.issubset(set(results.columns))
