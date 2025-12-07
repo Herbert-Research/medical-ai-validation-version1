@@ -1,5 +1,4 @@
-"""
-Headless entry point that reproduces the survival and calibration workflow.
+"""Headless entry point that reproduces the survival and calibration workflow.
 
 Usage:
     python demo_quickstart.py
@@ -8,7 +7,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import logging
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, Literal, Sequence, Tuple
@@ -38,6 +39,15 @@ from config import (
     NERVE_INVASION_RATE,
     VASCULAR_INVASION_RATE,
 )
+
+# Configure logging for pipeline execution
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger(__name__)
 
 # Direct matplotlib cache to a writable workspace path to avoid warnings when $HOME is locked down.
 MPL_CONFIG_DIR = Path.cwd() / "outputs" / ".mplconfig"
@@ -167,6 +177,34 @@ def grade_to_numeric(grade: str) -> float:
 def build_survival_dataset(
     n_patients: int = DEFAULT_N_PATIENTS, seed: int = DEFAULT_SEED
 ) -> pd.DataFrame:
+    """Generate synthetic survival cohort with clinical covariates.
+
+    Parameters
+    ----------
+    n_patients : int
+        Total number of patients. Must be >= 2 to have at least one per group.
+    seed : int
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    pd.DataFrame
+        Synthetic survival dataset with patient characteristics and outcomes.
+
+    Raises
+    ------
+    ValueError
+        If n_patients < 2.
+    TypeError
+        If seed is not an integer.
+    """
+    if n_patients < 2:
+        raise ValueError(
+            f"n_patients must be >= 2 to have at least one patient per group, got {n_patients}"
+        )
+    if not isinstance(seed, int):
+        raise TypeError(f"seed must be an integer, got {type(seed).__name__}")
+
     rng = np.random.default_rng(seed)
     n_control = n_patients // 2
     n_treatment = n_patients - n_control
@@ -227,7 +265,31 @@ def build_survival_dataset(
 def build_synthetic_gastric_node_dataset(
     n_patients: int = 220, seed: int = 7
 ) -> pd.DataFrame:
-    """Simulated gastric cancer cohort focused on node status discrimination."""
+    """Simulated gastric cancer cohort focused on node status discrimination.
+
+    Parameters
+    ----------
+    n_patients : int
+        Total number of patients. Must be >= 2.
+    seed : int
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    pd.DataFrame
+        Synthetic gastric cancer survival dataset.
+
+    Raises
+    ------
+    ValueError
+        If n_patients < 2.
+    TypeError
+        If seed is not an integer.
+    """
+    if n_patients < 2:
+        raise ValueError(f"n_patients must be >= 2, got {n_patients}")
+    if not isinstance(seed, int):
+        raise TypeError(f"seed must be an integer, got {type(seed).__name__}")
 
     rng = np.random.default_rng(seed)
     node_positive = rng.binomial(1, 0.45, size=n_patients)
@@ -401,6 +463,34 @@ def analyse_survival(
 def simulate_metastasis_dataset(
     n_samples: int = DEFAULT_METASTASIS_SAMPLES, seed: int = DEFAULT_SEED
 ) -> pd.DataFrame:
+    """Generate synthetic metastasis prediction dataset.
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of samples to generate. Must be >= 10 for meaningful splits.
+    seed : int
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    pd.DataFrame
+        Synthetic dataset with features and metastasis outcome.
+
+    Raises
+    ------
+    ValueError
+        If n_samples < 10.
+    TypeError
+        If seed is not an integer.
+    """
+    if n_samples < 10:
+        raise ValueError(
+            f"n_samples must be >= 10 for meaningful train/test splits, got {n_samples}"
+        )
+    if not isinstance(seed, int):
+        raise TypeError(f"seed must be an integer, got {type(seed).__name__}")
+
     rng = np.random.default_rng(seed)
     tumor_stage = rng.integers(1, 4, size=n_samples)
     lymph_nodes = rng.poisson(lam=6, size=n_samples)
@@ -688,118 +778,249 @@ def parse_cli_args(argv: Sequence[str] | None = None) -> RunConfig:
     )
 
 
-def run(config: RunConfig | None = None) -> None:
+def run(config: RunConfig | None = None) -> int:
+    """Execute the validation pipeline.
+
+    Parameters
+    ----------
+    config : RunConfig | None
+        Pipeline configuration. If None, uses default settings.
+
+    Returns
+    -------
+    int
+        Exit code: 0 for success, 1 for failure.
+    """
     cfg = config or RunConfig()
-    output_dir = Path(cfg.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # --- Output directory setup ---
+    try:
+        output_dir = Path(cfg.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Output directory: {output_dir.resolve()}")
+    except PermissionError as e:
+        logger.error(f"Cannot create output directory '{cfg.output_dir}': {e}")
+        return 1
+    except OSError as e:
+        logger.error(f"Failed to create output directory '{cfg.output_dir}': {e}")
+        return 1
 
     output_km = output_dir / "kaplan_meier_example.png"
     output_calibration = output_dir / "calibration_curve_example.png"
     output_gastric = output_dir / "synthetic_gastric_kaplan_meier.png"
     output_tcga = output_dir / "tcga_kaplan_meier.png"
 
-    survival_df = build_survival_dataset(n_patients=cfg.n_patients, seed=cfg.seed)
-    survival_results = analyse_survival(survival_df, output_km)
-    synthetic_summary_path = output_dir / "synthetic_survival_summary.csv"
-    write_dataframe(
-        survival_results_to_frame(
-            survival_results, "Synthetic (Standard vs AI-guided)"
-        ),
-        synthetic_summary_path,
-    )
+    # --- Synthetic survival cohort generation ---
+    try:
+        logger.info(
+            f"Generating synthetic survival cohort (n={cfg.n_patients}, seed={cfg.seed})..."
+        )
+        survival_df = build_survival_dataset(n_patients=cfg.n_patients, seed=cfg.seed)
+        logger.info(
+            f"Generated {len(survival_df)} patients with {survival_df['event'].sum()} events"
+        )
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid parameters for survival dataset: {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error generating survival dataset: {e}")
+        return 1
 
-    gastric_df = build_synthetic_gastric_node_dataset(seed=cfg.seed + 101)
-    gastric_results = analyse_survival(
-        gastric_df,
-        output_gastric,
-        treatment_label="Node-positive",
-        control_label="Node-negative",
-        covariate_cols=[
-            "tumor_stage",
-            "grade",
-            "lymph_ratio",
-            "perineural_invasion",
-            "vascular_invasion",
-            "age_years",
-            "albumin_g_dl",
-        ],
-        plot_title="Synthetic Gastric Survival by Node Status",
-    )
+    # --- Survival analysis ---
+    try:
+        logger.info("Running survival analysis...")
+        survival_results = analyse_survival(survival_df, output_km)
+        logger.info(
+            f"Survival analysis complete. HR={survival_results.hazard_ratio:.2f}, p={survival_results.logrank_p_value:.4f}"
+        )
+    except Exception as e:
+        logger.error(f"Survival analysis failed: {e}")
+        return 1
+    synthetic_summary_path = output_dir / "synthetic_survival_summary.csv"
+    try:
+        write_dataframe(
+            survival_results_to_frame(
+                survival_results, "Synthetic (Standard vs AI-guided)"
+            ),
+            synthetic_summary_path,
+        )
+    except (IOError, OSError) as e:
+        logger.error(f"Failed to write synthetic survival summary: {e}")
+        return 1
+
+    # --- Synthetic gastric cancer cohort ---
+    try:
+        logger.info("Generating synthetic gastric cancer cohort...")
+        gastric_df = build_synthetic_gastric_node_dataset(seed=cfg.seed + 101)
+        logger.info(f"Generated {len(gastric_df)} gastric cancer patients")
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid parameters for gastric dataset: {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error generating gastric dataset: {e}")
+        return 1
+    try:
+        logger.info("Running gastric cancer survival analysis...")
+        gastric_results = analyse_survival(
+            gastric_df,
+            output_gastric,
+            treatment_label="Node-positive",
+            control_label="Node-negative",
+            covariate_cols=[
+                "tumor_stage",
+                "grade",
+                "lymph_ratio",
+                "perineural_invasion",
+                "vascular_invasion",
+                "age_years",
+                "albumin_g_dl",
+            ],
+            plot_title="Synthetic Gastric Survival by Node Status",
+        )
+        logger.info(f"Gastric analysis complete. HR={gastric_results.hazard_ratio:.2f}")
+    except Exception as e:
+        logger.error(f"Gastric cancer survival analysis failed: {e}")
+        return 1
+
     synthetic_gastric_summary_path = (
         output_dir / "synthetic_gastric_cancer_survival_summary.csv"
     )
-    write_dataframe(
-        survival_results_to_frame(
-            gastric_results, "Synthetic gastric cancer (Node+ vs Node-)"
-        ),
-        synthetic_gastric_summary_path,
-    )
+    try:
+        write_dataframe(
+            survival_results_to_frame(
+                gastric_results, "Synthetic gastric cancer (Node+ vs Node-)"
+            ),
+            synthetic_gastric_summary_path,
+        )
+    except (IOError, OSError) as e:
+        logger.error(f"Failed to write gastric survival summary: {e}")
+        return 1
 
-    metastasis_df = simulate_metastasis_dataset(
-        n_samples=cfg.metastasis_samples, seed=cfg.seed
-    )
-    X = metastasis_df.drop(columns="metastasis")
-    y = metastasis_df["metastasis"]
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.25, stratify=y, random_state=DEFAULT_SEED
-    )
+    # --- Metastasis calibration analysis ---
+    try:
+        logger.info(f"Generating metastasis dataset (n={cfg.metastasis_samples})...")
+        metastasis_df = simulate_metastasis_dataset(
+            n_samples=cfg.metastasis_samples, seed=cfg.seed
+        )
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid parameters for metastasis dataset: {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error generating metastasis dataset: {e}")
+        return 1
 
-    calibration_summary, probs = evaluate_calibration_models(
-        X_train,
-        X_test,
-        y_train,
-        y_test,
-        strategy=cfg.calibration_bin_strategy,
-    )
-    plot_calibration_curves(
-        probs, y_test, output_calibration, strategy=cfg.calibration_bin_strategy
-    )
+    try:
+        X = metastasis_df.drop(columns="metastasis")
+        y = metastasis_df["metastasis"]
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.25, stratify=y, random_state=DEFAULT_SEED
+        )
+        logger.info(
+            f"Train/test split: {len(X_train)} train, {len(X_test)} test samples"
+        )
+    except Exception as e:
+        logger.error(f"Failed to prepare train/test split: {e}")
+        return 1
 
+    try:
+        logger.info("Evaluating calibration models...")
+        calibration_summary, probs = evaluate_calibration_models(
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+            strategy=cfg.calibration_bin_strategy,
+        )
+        logger.info(f"Calibration evaluation complete ({len(probs)} models compared)")
+    except Exception as e:
+        logger.error(f"Calibration model evaluation failed: {e}")
+        return 1
+
+    try:
+        plot_calibration_curves(
+            probs, y_test, output_calibration, strategy=cfg.calibration_bin_strategy
+        )
+        logger.info(f"Calibration curves saved to {output_calibration}")
+    except Exception as e:
+        logger.error(f"Failed to generate calibration plots: {e}")
+        return 1
+
+    # --- TCGA pilot analysis ---
     tcga_path = Path(cfg.tcga_path)
     tcga_results: SurvivalResults | None = None
     tcga_group_summary: pd.DataFrame | None = None
     if cfg.skip_tcga:
-        print("Skipping TCGA pilot analysis (flag enabled).")
+        logger.info("Skipping TCGA pilot analysis (--skip-tcga flag enabled)")
     else:
         if tcga_path.exists():
-            tcga_raw = load_tcga_clinical_table(tcga_path)
-            tcga_cohort = prepare_tcga_survival_cohort(tcga_raw)
+            try:
+                logger.info(f"Loading TCGA clinical data from {tcga_path}...")
+                tcga_raw = load_tcga_clinical_table(tcga_path)
+                tcga_cohort = prepare_tcga_survival_cohort(tcga_raw)
+            except Exception as e:
+                logger.error(f"Failed to load/prepare TCGA data: {e}")
+                return 1
+
             if not tcga_cohort.empty:
-                tcga_results = analyse_survival(
-                    tcga_cohort,
-                    output_tcga,
-                    treatment_label="Node-positive",
-                    control_label="Node-negative",
-                    covariate_cols=["tumor_stage_num", "grade_num", "diagnosis_age"],
-                    plot_title="TCGA-STAD Progression-Free Survival by N-stage",
-                )
-                group_rows = []
-                for group_label, subset in tcga_cohort.groupby("group"):
-                    kmf = KaplanMeierFitter()
-                    kmf.fit(subset["time_months"], event_observed=subset["event"])
-                    group_rows.append(
-                        {
-                            "group": group_label,
-                            "patients": len(subset),
-                            "median_months": kmf.median_survival_time_,
-                            "event_rate": subset["event"].mean(),
-                        }
+                try:
+                    logger.info(
+                        f"Running TCGA survival analysis (n={len(tcga_cohort)})..."
                     )
-                tcga_group_summary = pd.DataFrame(group_rows).round(
-                    {"median_months": 1, "event_rate": 3}
-                )
+                    tcga_results = analyse_survival(
+                        tcga_cohort,
+                        output_tcga,
+                        treatment_label="Node-positive",
+                        control_label="Node-negative",
+                        covariate_cols=[
+                            "tumor_stage_num",
+                            "grade_num",
+                            "diagnosis_age",
+                        ],
+                        plot_title="TCGA-STAD Progression-Free Survival by N-stage",
+                    )
+                    logger.info(
+                        f"TCGA analysis complete. HR={tcga_results.hazard_ratio:.2f}"
+                    )
+                except Exception as e:
+                    logger.error(f"TCGA survival analysis failed: {e}")
+                    return 1
+
+                try:
+                    group_rows = []
+                    for group_label, subset in tcga_cohort.groupby("group"):
+                        kmf = KaplanMeierFitter()
+                        kmf.fit(subset["time_months"], event_observed=subset["event"])
+                        group_rows.append(
+                            {
+                                "group": group_label,
+                                "patients": len(subset),
+                                "median_months": kmf.median_survival_time_,
+                                "event_rate": subset["event"].mean(),
+                            }
+                        )
+                    tcga_group_summary = pd.DataFrame(group_rows).round(
+                        {"median_months": 1, "event_rate": 3}
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to compute TCGA group summary: {e}")
+                    tcga_group_summary = None
             else:
-                print(
+                logger.warning(
                     "TCGA cohort preparation yielded 0 patients after filtering; "
                     "skipping pilot analysis."
                 )
         else:
-            print(
+            logger.warning(
                 f"TCGA clinical file not found at {tcga_path}. "
                 "Place it under data/ or point --tcga-path to a valid TSV."
             )
 
+    # --- Final summary output ---
+    logger.info("Pipeline execution successful. Generating summary reports...")
+
+    print("\n" + "=" * 60)
     print("=== Survival Analysis Summary ===")
+    print("=" * 60)
     print(
         f"Median DFS ({survival_results.treatment_label}): "
         f"{survival_results.median_treatment:.1f} months"
@@ -818,7 +1039,11 @@ def run(config: RunConfig | None = None) -> None:
     print(f"PH global p-value:      {survival_results.ph_global_p_value:.3f}")
 
     calibration_summary_path = output_dir / "calibration_summary.csv"
-    write_dataframe(calibration_summary, calibration_summary_path)
+    try:
+        write_dataframe(calibration_summary, calibration_summary_path)
+    except (IOError, OSError) as e:
+        logger.error(f"Failed to write calibration summary: {e}")
+        return 1
 
     print("\n=== Calibration Summary ===")
     print(calibration_summary.round(3).to_string(index=False))
@@ -852,14 +1077,18 @@ def run(config: RunConfig | None = None) -> None:
 
     if tcga_results is not None and tcga_group_summary is not None:
         tcga_summary_path = output_dir / "tcga_survival_summary.csv"
-        write_dataframe(
-            survival_results_to_frame(
-                tcga_results, "TCGA-STAD (Node-positive vs Node-negative)"
-            ),
-            tcga_summary_path,
-        )
-        tcga_group_summary_path = output_dir / "tcga_group_summary.csv"
-        write_dataframe(tcga_group_summary, tcga_group_summary_path)
+        try:
+            write_dataframe(
+                survival_results_to_frame(
+                    tcga_results, "TCGA-STAD (Node-positive vs Node-negative)"
+                ),
+                tcga_summary_path,
+            )
+            tcga_group_summary_path = output_dir / "tcga_group_summary.csv"
+            write_dataframe(tcga_group_summary, tcga_group_summary_path)
+        except (IOError, OSError) as e:
+            logger.error(f"Failed to write TCGA summaries: {e}")
+            return 1
 
         print("\n=== TCGA-STAD Pilot (Node-positive vs Node-negative) ===")
         print(
@@ -881,6 +1110,9 @@ def run(config: RunConfig | None = None) -> None:
             f"Summaries saved to: {tcga_summary_path.resolve()}, {tcga_group_summary_path.resolve()}."
         )
 
+    logger.info("Pipeline completed successfully.")
+    return 0
+
 
 if __name__ == "__main__":
-    run(parse_cli_args())
+    sys.exit(run(parse_cli_args()))
