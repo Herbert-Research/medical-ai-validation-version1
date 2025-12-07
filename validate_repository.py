@@ -168,7 +168,7 @@ def run() -> int:
             f"[OK] Loaded calibration summary with {len(calib)} models from {calib_path}"
         )
 
-        ece_values = calib["ECE (10-bin)"].values
+        ece_values = calib["ECE (10-bin)"].to_numpy()
         if all(ece < 0.05 for ece in ece_values):
             print("[OK] All ECE values below 0.05")
         else:
