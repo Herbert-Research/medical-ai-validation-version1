@@ -1,6 +1,6 @@
 # environment.yml
 # Conda environment for Medical AI Validation
-# 
+#
 # Usage:
 #   conda env create -f environment.yml
 #   conda activate medical-ai-validation
