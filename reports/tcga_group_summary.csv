@@ -1,0 +1,3 @@
+group,patients,median_months,event_rate
+Node-negative,121,14.4,0.248
+Node-positive,273,12.4,0.396
