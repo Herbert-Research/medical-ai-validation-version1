@@ -1,0 +1,29 @@
+Checking required files...
+[OK] README.md -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/README.md
+[OK] DATA_SOURCES.md -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/DATA_SOURCES.md
+[OK] demo_quickstart.py -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/demo_quickstart.py
+[OK] requirements.txt -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/requirements.txt
+[OK] calibration_summary.csv -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/outputs/calibration_summary.csv
+[OK] calibration_curve_example.png -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/outputs/calibration_curve_example.png
+[OK] synthetic_survival_summary.csv -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/outputs/synthetic_survival_summary.csv
+[OK] kaplan_meier_example.png -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/outputs/kaplan_meier_example.png
+[OK] test_demo_quickstart.py -> /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/tests/test_demo_quickstart.py
+
+Loading calibration summary...
+[OK] Loaded calibration summary with 3 models from /mnt/c/Users/m4rti/Documents/GitHub/medical-ai-validation/outputs/calibration_summary.csv
+[WARN] Some ECE values exceed 0.05 (max observed: 0.076)
+[WARN] Platt slope=3.52 deviates strongly from 1.0
+
+Checking survival data consistency...
+
+Checking survival dataset: tcga_survival_summary.csv
+[OK] Median DFS matches for Node-negative (inf vs inf)
+[INFO] Medians -> Node-positive: 25.54492554, Node-negative: inf
+
+Checking survival dataset: synthetic_gastric_cancer_survival_summary.csv
+[WARN] No group summary found for synthetic_gastric_cancer_survival_summary.csv; skipping median cross-check.
+[INFO] Medians -> Node-positive: 4.558051174268985, Node-negative: 5.411819919352793
+
+================================================================================
+All checks passed - repository appears consistent.
+================================================================================
