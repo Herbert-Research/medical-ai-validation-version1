@@ -1,0 +1,52 @@
+# environment.yml
+# Conda environment for Medical AI Validation
+# 
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate medical-ai-validation
+#
+# Update existing environment:
+#   conda env update -f environment.yml --prune
+
+name: medical-ai-validation
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Core Python
+  - python=3.9
+
+  # Data manipulation
+  - pandas=2.2.2
+  - numpy=1.26.4
+
+  # Visualization
+  - matplotlib=3.8.4
+  - seaborn=0.13.2
+
+  # Machine learning
+  - scikit-learn=1.4.2
+  - scipy=1.13.1
+
+  # Jupyter support
+  - jupyter=1.0.0
+  - ipykernel
+
+  # Pip dependencies (not available in conda or specific versions needed)
+  - pip
+  - pip:
+      # Survival analysis (conda-forge version may lag)
+      - lifelines==0.29.0
+
+      # Development tools
+      - black==24.4.2
+      - isort==5.13.2
+      - mypy==1.9.0
+      - pytest==8.1.1
+      - pytest-cov==5.0.0
+      - pre-commit==3.7.0
+
+      # Type stubs for mypy
+      - pandas-stubs
+      - types-setuptools
