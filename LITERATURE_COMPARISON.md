@@ -37,7 +37,7 @@ This document contextualizes the results from this repository within the publish
 **Reference:** Lee et al., *J Gastric Cancer*, 2023
 
 - Retrieved lymph nodes (AI-assisted): 42 +/- 12
-- Retrieved lymph nodes (Standard): 35 +/- 11  
+- Retrieved lymph nodes (Standard): 35 +/- 11
 - 3-year DFS: 68% vs 62%
 - **Effect size:** Moderate, consistent with our lower bound
 
@@ -137,7 +137,7 @@ Our calibration performance is **representative of real-world medical AI challen
 **Reference:** Kim et al., *J Gastric Cancer*, 2023
 
 - 5-year DFS (Node-negative): 68%
-- 5-year DFS (Node-positive): 42%  
+- 5-year DFS (Node-positive): 42%
 - HR: 1.94 (95% CI: 1.78-2.11)
 - **Comparison:** Our results align with Korean population data
 
@@ -151,16 +151,16 @@ Our synthetic node status analysis **accurately replicates established prognosti
 
 ### Strengths of Current Work
 
-- **Methodological rigor** matches or exceeds published standards  
-- **Calibration assessment** more comprehensive than most papers  
-- **Synthetic data** aligns well with real-world parameter ranges  
+- **Methodological rigor** matches or exceeds published standards
+- **Calibration assessment** more comprehensive than most papers
+- **Synthetic data** aligns well with real-world parameter ranges
 - **Statistical approach** appropriate for prospective trial design
 
 ### Areas for Future Work
 
-- **External validation:** Apply methods to independent hospital cohorts  
-- **Temporal validation:** Assess calibration drift over time  
-- **Prospective data:** Move from synthetic to real trial results  
+- **External validation:** Apply methods to independent hospital cohorts
+- **Temporal validation:** Assess calibration drift over time
+- **Prospective data:** Move from synthetic to real trial results
 - **Ensemble methods:** Explore advanced calibration techniques
 
 ### Positioning for PhD Research
