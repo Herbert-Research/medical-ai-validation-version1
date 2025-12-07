@@ -32,7 +32,7 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
+        additional_dependencies: [pandas-stubs, types-setuptools]
         args: [--ignore-missing-imports]
         files: ^(demo_quickstart|validate_repository|statistical_power_analysis)\.py$
 
@@ -44,7 +44,7 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        stages: [push]
+        stages: [pre-push]
 
 ci:
   autofix_commit_msg: "style: auto-fix from pre-commit hooks"
