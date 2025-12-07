@@ -1,12 +1,29 @@
-# Python
+# =============================================================================
+# .gitignore for Medical AI Validation Repository
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Python byte-compiled / optimized / DLL files
+# -----------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# -----------------------------------------------------------------------------
+# Virtual environments
+# -----------------------------------------------------------------------------
 env/
 venv/
 ENV/
+.venv/
+.venv-*/
+.venv*/
+
+# -----------------------------------------------------------------------------
+# Distribution / packaging
+# -----------------------------------------------------------------------------
 build/
 develop-eggs/
 dist/
@@ -22,37 +39,85 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.venv/
-.venv-1/
-.venv-repro/
-.venv*/
-finished
+MANIFEST
 
-# Jupyter
+# -----------------------------------------------------------------------------
+# Jupyter Notebook
+# -----------------------------------------------------------------------------
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 .ipython/
+*/.ipynb_checkpoints/*
 
-# IDE
+# -----------------------------------------------------------------------------
+# IDE / Editor
+# -----------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.sublime-workspace
+*.sublime-project
 
-# OS
+# -----------------------------------------------------------------------------
+# Operating System
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Backup files
+# -----------------------------------------------------------------------------
+# Testing / Coverage
+# -----------------------------------------------------------------------------
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# -----------------------------------------------------------------------------
+# Type checking
+# -----------------------------------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# -----------------------------------------------------------------------------
+# Backup / Temporary files
+# -----------------------------------------------------------------------------
 *_backup_*
 *.bak
+*.tmp
+*.temp
+*.log
+finished
+
+# -----------------------------------------------------------------------------
+# Project-specific
+# -----------------------------------------------------------------------------
+# Checksum files (regenerated on validation)
 current_state_checksums.txt
 
-# Test outputs
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Project outputs (keep generated artifacts, ignore temp files)
+# Matplotlib config cache
 outputs/.mplconfig/
+
+# Temporary sensitivity analysis figures
+outputs/.temp_*
+
+# Local development notes (not for version control)
+NOTES.md
+TODO.md
+.scratch/
