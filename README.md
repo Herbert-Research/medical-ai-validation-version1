@@ -1,6 +1,7 @@
 # Medical AI Validation Tools: Survival & Calibration
 
 [![CI](https://github.com/Herbert-Research/medical-ai-validation-version1/actions/workflows/ci.yml/badge.svg)](https://github.com/Herbert-Research/medical-ai-validation-version1/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Herbert-Research/medical-ai-validation-version1/graph/badge.svg)](https://codecov.io/gh/Herbert-Research/medical-ai-validation-version1)
 
 Supporting analytics package for the proposed PhD dissertation **"Prospective Validation of Station-Specific Risk Guidance for KLASS-Standardized Gastrectomy."** This repository establishes the quantitative framework for linking station-level machine learning predictions to disease-free survival (DFS) endpoints, a critical prerequisite for Aim 1 clinical deployment.
 

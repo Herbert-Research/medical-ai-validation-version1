@@ -1,0 +1,2 @@
+Cohort,Treatment label,Control label,Median DFS (treatment),Median DFS (control),Log-rank p-value,Hazard ratio,HR CI lower,HR CI upper,C-index,PH global p-value
+Synthetic (Standard vs AI-guided),AI-guided,Standard,27.749816325253875,12.597777677418648,0.0010357414299787687,0.5099332885708218,0.3724755407322076,0.6981182127596501,0.6729251215270036,0.5583134477521048

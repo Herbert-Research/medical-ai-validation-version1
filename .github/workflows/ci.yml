@@ -87,8 +87,18 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run tests with pytest
-        run: pytest tests/ -v --tb=short --color=yes
+      - name: Run tests with pytest and coverage
+        run: pytest tests/ -v --tb=short --color=yes --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Run notebook validation
+        run: pytest --nbmake survival_and_calibration_enhanced.ipynb -v --nbmake-timeout=300
 
       - name: Run repository validation
         run: python validate_repository.py
@@ -127,7 +137,7 @@ jobs:
       - name: Verify outputs generated
         run: |
           test -f test_outputs/kaplan_meier_example.png
-          test -f test_outputs/calibration_comparison.png
+          test -f test_outputs/calibration_curve_example.png
           test -f test_outputs/synthetic_survival_summary.csv
           test -f test_outputs/calibration_summary.csv
           echo "All expected outputs generated successfully"

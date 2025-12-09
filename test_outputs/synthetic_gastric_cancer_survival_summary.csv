@@ -1,0 +1,2 @@
+Cohort,Treatment label,Control label,Median DFS (treatment),Median DFS (control),Log-rank p-value,Hazard ratio,HR CI lower,HR CI upper,C-index,PH global p-value
+Synthetic gastric cancer (Node+ vs Node-),Node-positive,Node-negative,4.558051174268985,5.411819919352793,0.6258869764944498,1.2007492650483786,0.7764929574649749,1.856808595175516,0.6648480124707716,0.7173660686550197

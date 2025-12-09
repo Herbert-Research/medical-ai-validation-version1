@@ -1,0 +1,2 @@
+Cohort,Treatment label,Control label,Median DFS (treatment),Median DFS (control),Log-rank p-value,Hazard ratio,HR CI lower,HR CI upper,C-index,PH global p-value
+TCGA-STAD (Node-positive vs Node-negative),Node-positive,Node-negative,25.54492554,inf,0.0011603462854188197,1.8764951429190428,1.2339781872427682,2.8535626138308756,0.5666396281159329,0.3978791087260015
